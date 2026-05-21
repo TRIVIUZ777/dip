@@ -1,1 +1,911 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Gestor de Archivos - Carpetas y Editables</title>
+    <!-- Font Awesome 6 (gratuito) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            padding: 24px;
+            color: #1e293b;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 18px 28px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 i {
+            font-size: 1.8rem;
+        }
+
+        .badge {
+            background: rgba(255,255,255,0.2);
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-weight: normal;
+        }
+
+        /* Barra de acciones */
+        .action-bar {
+            padding: 16px 28px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #1e293b;
+        }
+
+        .btn i {
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: #2a5298;
+            border-color: #2a5298;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e3c72;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline:hover {
+            background: #eef2ff;
+            border-color: #94a3b8;
+        }
+
+        .btn-danger {
+            border-color: #fecaca;
+            color: #b91c1c;
+        }
+        .btn-danger:hover {
+            background: #fee2e2;
+        }
+
+        /* breadcrumb */
+        .breadcrumb {
+            padding: 12px 28px;
+            background: white;
+            border-bottom: 1px solid #e9eef3;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb-item {
+            cursor: pointer;
+            color: #4b5563;
+            transition: color 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .breadcrumb-item:hover {
+            color: #2a5298;
+            text-decoration: underline;
+        }
+
+        .breadcrumb-sep {
+            color: #94a3b8;
+        }
+
+        /* tabla/contenido */
+        .file-grid {
+            padding: 20px 28px;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 3fr 1fr 100px;
+            background: #f1f5f9;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+
+        .file-row {
+            display: grid;
+            grid-template-columns: 3fr 1fr 100px;
+            align-items: center;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 14px;
+            transition: background 0.1s;
+            margin-bottom: 6px;
+            border: 1px solid #eef2f6;
+        }
+
+        .file-row:hover {
+            background: #fafcff;
+            border-color: #cbdff2;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            overflow: hidden;
+        }
+
+        .file-icon {
+            font-size: 1.6rem;
+            width: 32px;
+            text-align: center;
+        }
+
+        .file-name {
+            font-weight: 500;
+            word-break: break-word;
+            cursor: pointer;
+        }
+
+        .folder-name {
+            cursor: pointer;
+            font-weight: 500;
+            color: #2c3e66;
+        }
+
+        .file-date {
+            font-size: 0.75rem;
+            color: #5b6e8c;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: #5b6e8c;
+            transition: 0.1s;
+        }
+
+        .action-icon:hover {
+            color: #1e3c72;
+            transform: scale(1.05);
+        }
+
+        .empty-folder {
+            text-align: center;
+            padding: 48px 20px;
+            color: #6c86a3;
+            background: #fefefe;
+            border-radius: 32px;
+            border: 1px dashed #cbd5e1;
+        }
+
+        /* modal de edición */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(3px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-card {
+            background: white;
+            width: 90%;
+            max-width: 700px;
+            border-radius: 32px;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: fadeUp 0.2s ease;
+        }
+
+        @keyframes fadeUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            font-family: monospace;
+            padding: 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            resize: vertical;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            background: #f9fbfd;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            border-top: 1px solid #ecf3f9;
+        }
+
+        button {
+            background: none;
+            border: none;
+        }
+
+        .toast-msg {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 60px;
+            font-size: 0.85rem;
+            z-index: 1100;
+            box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+
+        @media (max-width: 680px) {
+            body { padding: 12px; }
+            .table-header { display: none; }
+            .file-row { grid-template-columns: 1fr; gap: 8px; position: relative; }
+            .actions { justify-content: flex-start; margin-top: 6px; }
+            .file-date { font-size: 0.7rem; }
+            .action-bar { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <h1><i class="fas fa-folder-tree"></i> FileExplorer <span class="badge">Local FS</span></h1>
+        <div><i class="fas fa-database"></i> persistente · editables</div>
+    </div>
+
+    <div class="action-bar">
+        <div class="btn-group">
+            <button id="newFolderBtn" class="btn btn-outline"><i class="fas fa-folder-plus"></i> Crear carpeta</button>
+            <button id="newFileBtn" class="btn btn-outline"><i class="fas fa-file-alt"></i> Nuevo archivo</button>
+            <button id="newIndexBtn" class="btn btn-primary"><i class="fas fa-code"></i> Crear index editable</button>
+            <label class="btn btn-outline" style="cursor:pointer;"><i class="fas fa-upload"></i> Subir archivos
+                <input type="file" id="uploadInput" multiple style="display: none;">
+            </label>
+        </div>
+        <div class="btn-group">
+            <button id="resetStorageBtn" class="btn btn-danger" style="background:#fff;"><i class="fas fa-trash-alt"></i> Reiniciar</button>
+        </div>
+    </div>
+
+    <div class="breadcrumb" id="breadcrumbContainer">
+        <!-- breadcrumb dinámico -->
+    </div>
+
+    <div class="file-grid" id="fileListContainer">
+        <!-- lista de archivos/carpetas -->
+        <div class="empty-folder">
+            <i class="fas fa-folder-open" style="font-size: 2rem; opacity: 0.5;"></i>
+            <p>Cargando sistema de archivos...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal editor -->
+<div id="editModal" class="modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3><i class="fas fa-pen-alt"></i> Editar archivo: <span id="editFileName"></span></h3>
+            <i class="fas fa-times action-icon" id="closeModalBtn" style="font-size: 1.4rem;"></i>
+        </div>
+        <div class="modal-body">
+            <textarea id="fileContentEditor" placeholder="Contenido del archivo..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" id="cancelEditBtn">Cancelar</button>
+            <button class="btn btn-primary" id="saveEditBtn">Guardar cambios</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------------------- ESTRUCTURA DE DATOS --------------------------
+    // Nodo: { type: 'folder' | 'file', name, children (si folder), content: string (texto), isBinary: bool, mime: string, lastModified }
+    const STORAGE_KEY = "DynamicFileSystem_V2";
+
+    let root = null;           // nodo raíz
+    let currentPath = [];      // array de nombres de carpetas desde root
+
+    // Helper: inicializar o cargar desde localStorage
+    function loadState() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                root = JSON.parse(saved);
+                // Aseguramos compatibilidad
+                return;
+            } catch(e) { console.warn(e); }
+        }
+        // Sistema por defecto: carpeta raíz con un archivo index de bienvenida
+        root = {
+            type: 'folder',
+            name: 'root',
+            children: [
+                {
+                    type: 'file',
+                    name: 'bienvenido.txt',
+                    content: '¡Hola! Este es un archivo editable.\nPuedes crear carpetas, subir archivos y editar cualquier texto.\nLos archivos "index" se crean con el botón especial.',
+                    isBinary: false,
+                    mime: 'text/plain',
+                    lastModified: Date.now()
+                },
+                {
+                    type: 'folder',
+                    name: 'documentos',
+                    children: [
+                        {
+                            type: 'file',
+                            name: 'index.html',
+                            content: '<!DOCTYPE html>\n<html>\n<head><title>Ejemplo index</title></head>\n<body>\n<h1>Archivo index editable</h1>\n</body>\n</html>',
+                            isBinary: false,
+                            mime: 'text/html',
+                            lastModified: Date.now()
+                        }
+                    ]
+                }
+            ]
+        };
+    }
+
+    function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(root));
+    }
+
+    // Obtener el nodo actual según currentPath
+    function getCurrentFolderNode() {
+        let node = root;
+        for (let segment of currentPath) {
+            if (node.type !== 'folder') return null;
+            const child = node.children.find(c => c.type === 'folder' && c.name === segment);
+            if (!child) return null;
+            node = child;
+        }
+        return node;
+    }
+
+    // Obtener nodo específico (archivo o carpeta) dentro de la carpeta actual
+    function getItemInCurrent(name) {
+        const folder = getCurrentFolderNode();
+        if (!folder) return null;
+        return folder.children.find(c => c.name === name);
+    }
+
+    // Agregar carpeta
+    function createFolder(folderName) {
+        const folderNode = getCurrentFolderNode();
+        if (!folderNode) return false;
+        if (folderNode.children.some(c => c.name === folderName)) {
+            showToast(`Ya existe un elemento llamado "${folderName}"`, "error");
+            return false;
+        }
+        folderNode.children.push({
+            type: 'folder',
+            name: folderName,
+            children: []
+        });
+        saveState();
+        render();
+        showToast(`Carpeta "${folderName}" creada`, "success");
+        return true;
+    }
+
+    // Crear archivo de texto (editable)
+    function createTextFile(fileName, initialContent = "") {
+        const folderNode = getCurrentFolderNode();
+        if (!folderNode) return false;
+        if (folderNode.children.some(c => c.name === fileName)) {
+            showToast(`Ya existe "${fileName}"`, "error");
+            return false;
+        }
+        folderNode.children.push({
+            type: 'file',
+            name: fileName,
+            content: initialContent,
+            isBinary: false,
+            mime: 'text/plain',
+            lastModified: Date.now()
+        });
+        saveState();
+        render();
+        showToast(`Archivo "${fileName}" creado`, "success");
+        return true;
+    }
+
+    // Crear archivo "index" por defecto: index_<timestamp> o index.html si se prefiere. Elegimos index.html dentro del directorio
+    function createIndexFile() {
+        const folderNode = getCurrentFolderNode();
+        if (!folderNode) return;
+        let baseName = "index.html";
+        let counter = 1;
+        let finalName = baseName;
+        while (folderNode.children.some(c => c.name === finalName)) {
+            finalName = `index_${counter}.html`;
+            counter++;
+        }
+        const defaultContent = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documento Index</title>
+</head>
+<body>
+    <h1>📄 Página index editable</h1>
+    <p>Este archivo fue creado desde el gestor.</p>
+</body>
+</html>`;
+        folderNode.children.push({
+            type: 'file',
+            name: finalName,
+            content: defaultContent,
+            isBinary: false,
+            mime: 'text/html',
+            lastModified: Date.now()
+        });
+        saveState();
+        render();
+        showToast(`✅ Archivo index creado: ${finalName}`, "success");
+    }
+
+    // Subir archivos (pueden ser binarios o texto)
+    async function uploadFiles(files) {
+        const folderNode = getCurrentFolderNode();
+        if (!folderNode) return;
+        for (let file of files) {
+            const exists = folderNode.children.some(c => c.name === file.name);
+            if (exists) {
+                showToast(`⚠️ "${file.name}" ya existe, omítelo`, "error");
+                continue;
+            }
+            const isTextLike = file.type.startsWith('text/') || file.name.match(/\.(txt|md|html|css|js|json|xml|svg)$/i);
+            if (isTextLike) {
+                const textContent = await file.text();
+                folderNode.children.push({
+                    type: 'file',
+                    name: file.name,
+                    content: textContent,
+                    isBinary: false,
+                    mime: file.type || 'text/plain',
+                    lastModified: file.lastModified
+                });
+                showToast(`📄 Subido texto: ${file.name}`, "success");
+            } else {
+                // binario: guardar como base64
+                const base64 = await fileToBase64(file);
+                folderNode.children.push({
+                    type: 'file',
+                    name: file.name,
+                    content: base64,
+                    isBinary: true,
+                    mime: file.type,
+                    lastModified: file.lastModified
+                });
+                showToast(`📎 Subido binario: ${file.name}`, "success");
+            }
+        }
+        saveState();
+        render();
+    }
+
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Eliminar elemento (carpeta o archivo)
+    function deleteItem(itemName) {
+        const folderNode = getCurrentFolderNode();
+        if (!folderNode) return;
+        const idx = folderNode.children.findIndex(c => c.name === itemName);
+        if (idx === -1) return;
+        const item = folderNode.children[idx];
+        const isFolder = item.type === 'folder';
+        const confirmMsg = isFolder ? `¿Eliminar carpeta "${itemName}" y TODO su contenido?` : `¿Eliminar archivo "${itemName}"?`;
+        if (confirm(confirmMsg)) {
+            folderNode.children.splice(idx, 1);
+            saveState();
+            render();
+            showToast(`Eliminado: ${itemName}`, "info");
+        }
+    }
+
+    // Renombrar elemento
+    function renameItem(oldName, newName) {
+        if (!newName || newName.trim() === "") {
+            showToast("Nombre inválido", "error");
+            return false;
+        }
+        newName = newName.trim();
+        const folderNode = getCurrentFolderNode();
+        if (!folderNode) return false;
+        const item = folderNode.children.find(c => c.name === oldName);
+        if (!item) return false;
+        if (folderNode.children.some(c => c.name === newName && c.name !== oldName)) {
+            showToast(`Ya existe "${newName}"`, "error");
+            return false;
+        }
+        item.name = newName;
+        saveState();
+        render();
+        showToast(`Renombrado a "${newName}"`, "success");
+        return true;
+    }
+
+    // Editar contenido (solo si no es binario)
+    function editTextFile(fileName, newContent) {
+        const folderNode = getCurrentFolderNode();
+        const item = folderNode?.children.find(c => c.name === fileName && c.type === 'file');
+        if (!item) return false;
+        if (item.isBinary) {
+            showToast("No se puede editar un archivo binario", "error");
+            return false;
+        }
+        item.content = newContent;
+        item.lastModified = Date.now();
+        saveState();
+        render();
+        showToast(`"${fileName}" actualizado`, "success");
+        return true;
+    }
+
+    // Obtener contenido para mostrar en editor
+    function getFileContentForEdit(fileName) {
+        const item = getItemInCurrent(fileName);
+        if (!item || item.type !== 'file') return null;
+        if (item.isBinary) return null;
+        return item.content;
+    }
+
+    // Navegación
+    function navigateToFolder(folderName) {
+        const folderNode = getCurrentFolderNode();
+        const target = folderNode?.children.find(c => c.type === 'folder' && c.name === folderName);
+        if (target) {
+            currentPath.push(folderName);
+            render();
+        }
+    }
+
+    function goUp() {
+        if (currentPath.length > 0) {
+            currentPath.pop();
+            render();
+        }
+    }
+
+    function goToRoot() {
+        currentPath = [];
+        render();
+    }
+
+    // Descargar archivo (binary o texto)
+    function downloadFile(fileName) {
+        const item = getItemInCurrent(fileName);
+        if (!item || item.type !== 'file') return;
+        let blob;
+        if (item.isBinary) {
+            // content es dataURL base64
+            const byteString = atob(item.content.split(',')[1]);
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+            blob = new Blob([ab], { type: item.mime || 'application/octet-stream' });
+        } else {
+            blob = new Blob([item.content], { type: item.mime || 'text/plain' });
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = item.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(`Descargando: ${fileName}`, "info");
+    }
+
+    // Determinar si un archivo es editable (texto plano, html, etc)
+    function isEditable(fileNode) {
+        if (fileNode.type !== 'file') return false;
+        if (fileNode.isBinary) return false;
+        const textMimes = ['text/', 'application/json', 'application/javascript', 'application/xml'];
+        if (textMimes.some(m => fileNode.mime?.startsWith(m))) return true;
+        const ext = fileNode.name.split('.').pop().toLowerCase();
+        const textExts = ['txt','html','htm','css','js','json','md','xml','svg','py','java','c','cpp','rb','php'];
+        return textExts.includes(ext);
+    }
+
+    // Renderizar UI completa
+    function render() {
+        renderBreadcrumb();
+        renderFileList();
+    }
+
+    function renderBreadcrumb() {
+        const container = document.getElementById('breadcrumbContainer');
+        container.innerHTML = '';
+        const homeBtn = document.createElement('div');
+        homeBtn.className = 'breadcrumb-item';
+        homeBtn.innerHTML = '<i class="fas fa-home"></i> Raíz';
+        homeBtn.onclick = () => goToRoot();
+        container.appendChild(homeBtn);
+        let accumulatedPath = [];
+        for (let i = 0; i < currentPath.length; i++) {
+            const segment = currentPath[i];
+            const sep = document.createElement('span');
+            sep.className = 'breadcrumb-sep';
+            sep.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            container.appendChild(sep);
+            const crumb = document.createElement('div');
+            crumb.className = 'breadcrumb-item';
+            crumb.innerHTML = `<i class="fas fa-folder"></i> ${escapeHtml(segment)}`;
+            const idx = i;
+            crumb.onclick = () => {
+                currentPath = currentPath.slice(0, idx+1);
+                render();
+            };
+            container.appendChild(crumb);
+        }
+        if (currentPath.length > 0) {
+            const upBtn = document.createElement('div');
+            upBtn.className = 'breadcrumb-item';
+            upBtn.style.marginLeft = 'auto';
+            upBtn.innerHTML = '<i class="fas fa-level-up-alt"></i> Subir';
+            upBtn.onclick = () => goUp();
+            container.appendChild(upBtn);
+        }
+    }
+
+    function renderFileList() {
+        const container = document.getElementById('fileListContainer');
+        const currentNode = getCurrentFolderNode();
+        if (!currentNode || currentNode.type !== 'folder') {
+            container.innerHTML = '<div class="empty-folder">Error: carpeta no encontrada</div>';
+            return;
+        }
+        const children = currentNode.children || [];
+        if (children.length === 0) {
+            container.innerHTML = `<div class="empty-folder"><i class="fas fa-folder-open"></i> <p>Carpeta vacía. Crea archivos o sube contenido.</p></div>`;
+            return;
+        }
+
+        // Ordenar: carpetas primero, luego archivos
+        const sorted = [...children].sort((a,b) => {
+            if (a.type === 'folder' && b.type !== 'folder') return -1;
+            if (a.type !== 'folder' && b.type === 'folder') return 1;
+            return a.name.localeCompare(b.name);
+        });
+
+        const html = `
+            <div class="table-header">
+                <span>Nombre</span>
+                <span>Modificado</span>
+                <span>Acciones</span>
+            </div>
+            ${sorted.map(item => {
+                const isFolder = item.type === 'folder';
+                const icon = isFolder ? '<i class="fas fa-folder" style="color:#eab308;"></i>' : (item.isBinary ? '<i class="fas fa-file-image"></i>' : '<i class="fas fa-file-alt"></i>');
+                const dateStr = item.lastModified ? new Date(item.lastModified).toLocaleDateString() : '—';
+                const nameDisplay = escapeHtml(item.name);
+                const editableFlag = (!isFolder && isEditable(item)) ? true : false;
+                return `
+                    <div class="file-row" data-name="${escapeAttr(item.name)}">
+                        <div class="file-info">
+                            <div class="file-icon">${icon}</div>
+                            <div class="file-name ${isFolder ? 'folder-name' : ''}" data-action="${isFolder ? 'open' : ''}">
+                                ${nameDisplay}
+                            </div>
+                        </div>
+                        <div class="file-date">${dateStr}</div>
+                        <div class="actions">
+                            ${isFolder ? `<i class="fas fa-folder-open action-icon" title="Abrir" data-action="open"></i>` : 
+                                (editableFlag ? `<i class="fas fa-edit action-icon" title="Editar" data-action="edit"></i>` : '')}
+                            ${!isFolder ? `<i class="fas fa-download action-icon" title="Descargar" data-action="download"></i>` : ''}
+                            <i class="fas fa-pen action-icon" title="Renombrar" data-action="rename"></i>
+                            <i class="fas fa-trash-alt action-icon" title="Eliminar" data-action="delete"></i>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        `;
+        container.innerHTML = html;
+
+        // Event delegation
+        container.querySelectorAll('.file-row').forEach(row => {
+            const nameElem = row.querySelector('.file-name');
+            const name = nameElem?.innerText.trim() || '';
+            // Abrir carpeta o (si es archivo no se abre)
+            const openIcon = row.querySelector('[data-action="open"]');
+            if (openIcon) openIcon.addEventListener('click', (e) => { e.stopPropagation(); navigateToFolder(name); });
+            if (nameElem && nameElem.classList.contains('folder-name')) {
+                nameElem.addEventListener('click', () => navigateToFolder(name));
+            }
+            // acciones
+            const editBtn = row.querySelector('[data-action="edit"]');
+            if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditor(name); });
+            const downloadBtn = row.querySelector('[data-action="download"]');
+            if (downloadBtn) downloadBtn.addEventListener('click', (e) => { e.stopPropagation(); downloadFile(name); });
+            const renameBtn = row.querySelector('[data-action="rename"]');
+            if (renameBtn) renameBtn.addEventListener('click', (e) => { e.stopPropagation(); promptRename(name); });
+            const deleteBtn = row.querySelector('[data-action="delete"]');
+            if (deleteBtn) deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteItem(name); });
+        });
+    }
+
+    function openEditor(fileName) {
+        const content = getFileContentForEdit(fileName);
+        if (content === null) {
+            showToast("No se puede editar este archivo (binario o no texto)", "error");
+            return;
+        }
+        const modal = document.getElementById('editModal');
+        const fileNameSpan = document.getElementById('editFileName');
+        const textarea = document.getElementById('fileContentEditor');
+        fileNameSpan.innerText = fileName;
+        textarea.value = content;
+        modal.style.display = 'flex';
+        // Guardar referencia
+        window._editingFileName = fileName;
+    }
+
+    function closeEditor() {
+        document.getElementById('editModal').style.display = 'none';
+        window._editingFileName = null;
+    }
+
+    function saveCurrentEdit() {
+        const fileName = window._editingFileName;
+        if (!fileName) return;
+        const newContent = document.getElementById('fileContentEditor').value;
+        editTextFile(fileName, newContent);
+        closeEditor();
+    }
+
+    function promptRename(oldName) {
+        const newName = prompt("Nuevo nombre:", oldName);
+        if (newName && newName !== oldName) renameItem(oldName, newName);
+    }
+
+    function showToast(msg, type = "info") {
+        let toast = document.querySelector('.toast-msg');
+        if(toast) toast.remove();
+        const div = document.createElement('div');
+        div.className = 'toast-msg';
+        div.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i> ${msg}`;
+        document.body.appendChild(div);
+        setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 300); }, 2500);
+    }
+
+    function resetEverything() {
+        if(confirm("⚠️ Esto BORRARÁ todos los archivos y carpetas. ¿Reiniciar sistema a valores iniciales?")) {
+            localStorage.removeItem(STORAGE_KEY);
+            loadState();
+            currentPath = [];
+            saveState();
+            render();
+            showToast("Sistema reiniciado con éxito", "info");
+        }
+    }
+
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+    function escapeAttr(str) { return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+    // -------- EVENTOS INICIALES --------
+    document.addEventListener('DOMContentLoaded', () => {
+        loadState();
+        if(!root) loadState();
+        saveState(); // asegurar
+        render();
+
+        document.getElementById('newFolderBtn').onclick = () => { let name = prompt("Nombre de la carpeta:"); if(name) createFolder(name.trim()); };
+        document.getElementById('newFileBtn').onclick = () => { let name = prompt("Nombre del archivo (ej: nota.txt):", "nuevo.txt"); if(name) createTextFile(name.trim(), ""); };
+        document.getElementById('newIndexBtn').onclick = () => { createIndexFile(); };
+        document.getElementById('uploadInput').onchange = (e) => { if(e.target.files.length) uploadFiles(Array.from(e.target.files)); e.target.value = ''; };
+        document.getElementById('resetStorageBtn').onclick = () => resetEverything();
+
+        // modal handlers
+        const modal = document.getElementById('editModal');
+        document.getElementById('closeModalBtn').onclick = () => closeEditor();
+        document.getElementById('cancelEditBtn').onclick = () => closeEditor();
+        document.getElementById('saveEditBtn').onclick = () => saveCurrentEdit();
+        window.onclick = (e) => { if(e.target === modal) closeEditor(); };
+    });
+</script>
+</body>
+</html>
